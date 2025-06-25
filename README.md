@@ -1,6 +1,6 @@
-# daily_journal
+# event_management
 
-Daily Journal
+EVENT MANGAEMENT
 
 ## Getting Started
 

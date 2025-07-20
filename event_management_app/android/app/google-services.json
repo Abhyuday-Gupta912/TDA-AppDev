@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "947941851976",
+    "project_id": "event-management-app-7797d",
+    "storage_bucket": "event-management-app-7797d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:947941851976:android:7086cf4231619d674fe97d",
+        "android_client_info": {
+          "package_name": "com.abhyuday.event_management_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8ku3KOiOqb5mvNCPcJzhQhaTcDCCN3KU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

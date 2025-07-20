@@ -24,9 +24,6 @@ class EventRegistrationScreen extends StatefulWidget {
 
 class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _phoneController = TextEditingController();
-  final _emergencyContactController = TextEditingController();
-  final _specialRequirementsController = TextEditingController();
 
   Event? _event;
   bool _isLoading = true;
@@ -47,9 +44,6 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
 
   @override
   void dispose() {
-    _phoneController.dispose();
-    _emergencyContactController.dispose();
-    _specialRequirementsController.dispose();
     _razorpay.clear();
     super.dispose();
   }
@@ -62,12 +56,6 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
       _event = event;
       _isLoading = false;
     });
-
-    // Pre-fill phone number if available
-    final user = Provider.of<AuthProvider>(context, listen: false).user;
-    if (user?.phone != null) {
-      _phoneController.text = user!.phone!;
-    }
   }
 
   @override
@@ -261,7 +249,7 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Registration Details',
+              'Registration Confirmation',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppTheme.grey900,
@@ -270,51 +258,40 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
 
             const SizedBox(height: 20),
 
-            // Phone Number
-            CustomTextField(
-              controller: _phoneController,
-              labelText: 'Phone Number',
-              hintText: 'Enter your phone number',
-              keyboardType: TextInputType.phone,
-              prefixIcon: Icons.phone,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Phone number is required';
-                }
-                if (value.length < 10) {
-                  return 'Please enter a valid phone number';
-                }
-                return null;
+            // Show user's details for confirmation
+            Consumer<AuthProvider>(
+              builder: (context, authProvider, _) {
+                final user = authProvider.user;
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.grey50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.grey200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Registration Details',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.grey800,
+                                ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDetailRow(
+                          Icons.person, 'Name', user?.fullName ?? ''),
+                      const SizedBox(height: 8),
+                      _buildDetailRow(Icons.email, 'Email', user?.email ?? ''),
+                      const SizedBox(height: 8),
+                      _buildDetailRow(
+                          Icons.phone, 'Phone', user?.phone ?? 'Not provided'),
+                    ],
+                  ),
+                );
               },
-            ),
-
-            const SizedBox(height: 16),
-
-            // Emergency Contact
-            CustomTextField(
-              controller: _emergencyContactController,
-              labelText: 'Emergency Contact',
-              hintText: 'Emergency contact number',
-              keyboardType: TextInputType.phone,
-              prefixIcon: Icons.emergency,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Emergency contact is required';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            // Special Requirements
-            CustomTextField(
-              controller: _specialRequirementsController,
-              labelText: 'Special Requirements',
-              hintText:
-                  'Any dietary restrictions, accessibility needs, etc. (Optional)',
-              maxLines: 3,
-              prefixIcon: Icons.note_add,
             ),
           ],
         ),
@@ -438,9 +415,32 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
     return _agreedToTerms && !_event!.isFull && !_event!.isPast;
   }
 
-  Future<void> _handleRegistration() async {
-    if (!_formKey.currentState!.validate()) return;
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: AppTheme.grey600),
+        const SizedBox(width: 8),
+        Text(
+          '$label: ',
+          style: TextStyle(
+            color: AppTheme.grey600,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: AppTheme.grey800,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
+  Future<void> _handleRegistration() async {
     setState(() {
       _isRegistering = true;
     });
@@ -481,7 +481,7 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
       'name': 'Event Registration',
       'description': _event!.title,
       'prefill': {
-        'contact': _phoneController.text,
+        'contact': user?.phone ?? '',
         'email': user?.email ?? '',
       },
       'theme': {

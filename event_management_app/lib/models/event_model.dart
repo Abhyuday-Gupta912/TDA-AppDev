@@ -47,13 +47,7 @@ class Event {
 
   bool get isFree => price == 0;
   bool get isFull => attendeesCount >= maxAttendees;
-  bool get isUpcoming {
-    final now = DateTime.now();
-    final isAfter = startDate.isAfter(now);
-    print(
-        'Event ${title}: startDate=${startDate}, now=${now}, isUpcoming=${isAfter}');
-    return isAfter;
-  }
+  bool get isUpcoming => startDate.isAfter(DateTime.now());
 
   bool get isPast => endDate.isBefore(DateTime.now());
 

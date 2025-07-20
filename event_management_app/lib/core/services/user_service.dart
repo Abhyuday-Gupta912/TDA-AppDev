@@ -150,6 +150,12 @@ class UserService {
         'qrCode': _generateQRCode(currentUser.uid, eventId),
       };
 
+      print('🔥 ATTEMPTING REGISTRATION:');
+      print('  User ID: ${currentUser.uid}');
+      print('  Event ID: $eventId');
+      print('  User authenticated: ${currentUser.uid != null}');
+      print('  Registration data: $registrationData');
+
       final regDoc = await _registrationsCollection.add(registrationData);
 
       // Update event attendees count
@@ -173,6 +179,8 @@ class UserService {
         'registration': registrationResult,
       };
     } catch (e) {
+      print('❌ REGISTRATION ERROR: ${e.toString()}');
+      print('   Error type: ${e.runtimeType}');
       return {
         'success': false,
         'message': 'Registration failed: ${e.toString()}',

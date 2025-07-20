@@ -13,19 +13,9 @@ class EventProvider extends ChangeNotifier {
   String? get error => _error;
 
   // Filtered events
-  List<Event> get upcomingEvents {
-    final upcoming = _events
-        .where((event) => event.isUpcoming && !event.isLive)
-        .toList()
-      ..sort((a, b) => a.startDate.compareTo(b.startDate));
-    print(
-        'EventProvider: Total events: ${_events.length}, Upcoming: ${upcoming.length}');
-    for (var event in _events) {
-      print(
-          'Event: ${event.title}, Start: ${event.startDate}, isUpcoming: ${event.isUpcoming}, isLive: ${event.isLive}');
-    }
-    return upcoming;
-  }
+  List<Event> get upcomingEvents =>
+      _events.where((event) => event.isUpcoming && !event.isLive).toList()
+        ..sort((a, b) => a.startDate.compareTo(b.startDate));
 
   List<Event> get liveEvents => _events.where((event) => event.isLive).toList()
     ..sort((a, b) => b.startDate.compareTo(a.startDate));
@@ -44,10 +34,8 @@ class EventProvider extends ChangeNotifier {
     try {
       final eventsData = await EventService.getAllEvents();
       _events = eventsData.map((json) => Event.fromJson(json)).toList();
-      print('EventProvider: Loaded ${_events.length} events'); // Debug log
       notifyListeners();
     } catch (e) {
-      print('EventProvider Error: ${e.toString()}'); // Debug log
       _setError('Failed to load events: ${e.toString()}');
     } finally {
       _setLoading(false);

@@ -1,59 +1,19 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users collection - users can read/write their own data
+    // Users collection
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      allow read: if request.auth != null; // Allow reading other users for organizer info
+      allow read, write: if request.auth != null;
     }
     
     // Events collection
     match /events/{eventId} {
-      // Anyone authenticated can read events
-      allow read: if request.auth != null;
-      
-      // Allow creating events if:
-      // 1. User is the organizer of the event being created, OR
-      // 2. User is an admin
-      allow create: if request.auth != null && (
-        request.auth.uid == request.resource.data.organizerId ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
-      );
-      
-      // Only event organizer or admin can update/delete
-      allow update, delete: if request.auth != null && (
-        request.auth.uid == resource.data.organizerId ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
-      );
+      allow read, write: if request.auth != null;
     }
     
-    // Event registrations collection
+    // Event registrations collection  
     match /event_registrations/{registrationId} {
-      // Users can read their own registrations
-      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
-      
-      // Event organizers and admins can read all registrations for their events
-      allow read: if request.auth != null && (
-        request.auth.uid == get(/databases/$(database)/documents/events/$(resource.data.eventId)).data.organizerId ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
-      );
-      
-      // Users can create registrations for themselves
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      
-      // Users can update their own registrations (for check-in status)
-      allow update: if request.auth != null && (
-        request.auth.uid == resource.data.userId ||
-        request.auth.uid == get(/databases/$(database)/documents/events/$(resource.data.eventId)).data.organizerId ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
-      );
-      
-      // Users can delete their own registrations
-      allow delete: if request.auth != null && (
-        request.auth.uid == resource.data.userId ||
-        request.auth.uid == get(/databases/$(database)/documents/events/$(resource.data.eventId)).data.organizerId ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
-      );
+      allow read, write: if request.auth != null;
     }
   }
 } 

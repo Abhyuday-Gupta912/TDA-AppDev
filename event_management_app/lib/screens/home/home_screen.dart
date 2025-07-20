@@ -245,8 +245,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return TabBarView(
           controller: _tabController,
           children: [
-            _buildEventsGrid(
-                eventProvider.events), // TEMP: Show all events for debugging
+            _buildEventsGrid(_getUpcomingEvents(eventProvider.events)),
             _buildEventsGrid(eventProvider.popularEvents),
             _buildEventsGrid(eventProvider.liveEvents),
           ],
@@ -311,6 +310,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         );
       },
     );
+  }
+
+  List<Event> _getUpcomingEvents(List<Event> events) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day); // Start of today
+
+    final upcomingEvents = events.where((event) {
+      // Show events that start today or after today
+      final eventDate = DateTime(
+          event.startDate.year, event.startDate.month, event.startDate.day);
+      return (eventDate.isAfter(today) || eventDate.isAtSameMomentAs(today)) &&
+          !event.isLive;
+    }).toList();
+
+    // Sort by start date (earliest first)
+    upcomingEvents.sort((a, b) => a.startDate.compareTo(b.startDate));
+
+    return upcomingEvents;
   }
 
   void _showFilterBottomSheet() {

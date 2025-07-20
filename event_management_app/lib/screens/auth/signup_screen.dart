@@ -21,9 +21,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _adminCodeController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
+  bool _isAdminSignup = false;
 
   @override
   void dispose() {
@@ -33,6 +35,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _adminCodeController.dispose();
     super.dispose();
   }
 
@@ -260,6 +263,89 @@ class _SignUpScreenState extends State<SignUpScreen> {
               return null;
             },
           ),
+
+          const SizedBox(height: 16),
+
+          // Admin Signup Toggle
+          _buildAdminToggle(),
+
+          if (_isAdminSignup) ...[
+            const SizedBox(height: 16),
+            // Admin Code Field
+            CustomTextField(
+              controller: _adminCodeController,
+              labelText: 'Admin Code',
+              hintText: 'Enter admin authorization code',
+              prefixIcon: Icons.admin_panel_settings_outlined,
+              validator: (value) {
+                if (_isAdminSignup && (value == null || value.isEmpty)) {
+                  return 'Admin code is required';
+                }
+                return null;
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminToggle() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _isAdminSignup
+            ? AppTheme.primaryColor.withOpacity(0.05)
+            : AppTheme.grey50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _isAdminSignup
+              ? AppTheme.primaryColor.withOpacity(0.2)
+              : AppTheme.grey200,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.admin_panel_settings,
+            color: _isAdminSignup ? AppTheme.primaryColor : AppTheme.grey500,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Admin Account',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: _isAdminSignup
+                            ? AppTheme.primaryColor
+                            : AppTheme.grey700,
+                      ),
+                ),
+                Text(
+                  'Create an admin account to manage events',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.grey500,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: _isAdminSignup,
+            onChanged: (value) {
+              setState(() {
+                _isAdminSignup = value;
+                if (!value) {
+                  _adminCodeController.clear();
+                }
+              });
+            },
+            activeColor: AppTheme.primaryColor,
+          ),
         ],
       ),
     );
@@ -321,7 +407,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
         return CustomButton(
-          text: 'CREATE ACCOUNT',
+          text: _isAdminSignup ? 'CREATE ADMIN ACCOUNT' : 'CREATE ACCOUNT',
           isLoading: authProvider.isLoading,
           onPressed: _agreeToTerms ? _handleSignup : null,
           backgroundColor: AppTheme.primaryColor,
@@ -369,20 +455,37 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    final success = await authProvider.signup(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-      firstName: _firstNameController.text.trim(),
-      lastName: _lastNameController.text.trim(),
-      phone: _phoneController.text.trim(),
-    );
+    bool success;
+
+    if (_isAdminSignup) {
+      // Admin signup
+      success = await authProvider.signupAdmin(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        phone: _phoneController.text.trim(),
+        adminCode: _adminCodeController.text.trim(),
+      );
+    } else {
+      // Regular user signup
+      success = await authProvider.signup(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        phone: _phoneController.text.trim(),
+      );
+    }
 
     if (success) {
       if (mounted) {
         // Show success message
+        final accountType = _isAdminSignup ? 'Admin' : '';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Account created successfully! Welcome aboard! 🎉'),
+          SnackBar(
+            content: Text(
+                '$accountType Account created successfully! Welcome aboard! 🎉'),
             backgroundColor: AppTheme.successColor,
           ),
         );

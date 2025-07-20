@@ -95,20 +95,43 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 ),
               ),
 
-              // QR Scanner for Check-ins
-              IconButton(
-                onPressed: () => context.push('/qr-scanner'),
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+              // Admin Actions
+              Row(
+                children: [
+                  // Promote User Button
+                  IconButton(
+                    onPressed: _showPromoteUserDialog,
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.successColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.person_add,
+                        color: AppTheme.successColor,
+                      ),
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.qr_code_scanner,
-                    color: AppTheme.primaryColor,
+
+                  const SizedBox(width: 8),
+
+                  // QR Scanner for Check-ins
+                  IconButton(
+                    onPressed: () => context.push('/qr-scanner'),
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.qr_code_scanner,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
@@ -762,6 +785,117 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               'Delete',
               style: TextStyle(color: AppTheme.errorColor),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPromoteUserDialog() {
+    final TextEditingController emailController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.person_add, color: AppTheme.successColor),
+            SizedBox(width: 8),
+            Text('Promote User to Admin'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter the email address of the user you want to promote to admin:',
+              style: TextStyle(color: AppTheme.grey600),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(
+                labelText: 'Email Address',
+                hintText: 'user@example.com',
+                prefixIcon: Icon(Icons.email),
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.warningColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppTheme.warningColor.withOpacity(0.3),
+                ),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.warning, color: AppTheme.warningColor, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Only super admins can promote users to admin.',
+                      style: TextStyle(
+                        color: AppTheme.warningColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          Consumer<AuthProvider>(
+            builder: (context, authProvider, _) {
+              return ElevatedButton(
+                onPressed: () async {
+                  final email = emailController.text.trim();
+                  if (email.isEmpty) return;
+
+                  Navigator.of(context).pop();
+
+                  final success = await authProvider.promoteToAdmin(email);
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(success
+                            ? 'User promoted to admin successfully!'
+                            : authProvider.error ?? 'Failed to promote user'),
+                        backgroundColor: success
+                            ? AppTheme.successColor
+                            : AppTheme.errorColor,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.successColor,
+                ),
+                child: authProvider.isLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppTheme.white,
+                        ),
+                      )
+                    : const Text('Promote',
+                        style: TextStyle(color: AppTheme.white)),
+              );
+            },
           ),
         ],
       ),

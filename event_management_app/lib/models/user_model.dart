@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class User {
   final String id;
   final String email;
@@ -40,13 +42,41 @@ class User {
       phone: json['phone'],
       profileImage: json['profileImage'],
       isAdmin: json['isAdmin'] ?? false,
-      createdAt:
-          DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt:
-          DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: _parseDateTime(json['createdAt']),
+      updatedAt: _parseDateTime(json['updatedAt']),
       registeredEvents: List<String>.from(json['registeredEvents'] ?? []),
       bookmarkedEvents: List<String>.from(json['bookmarkedEvents'] ?? []),
     );
+  }
+
+  /// Helper method to parse DateTime from various formats (Timestamp, String, or null)
+  static DateTime _parseDateTime(dynamic dateValue) {
+    if (dateValue == null) return DateTime.now();
+
+    // If it's already a DateTime
+    if (dateValue is DateTime) return dateValue;
+
+    // If it's a Firestore Timestamp
+    if (dateValue is Timestamp) {
+      return dateValue.toDate();
+    }
+
+    // If it's a string, try to parse it
+    if (dateValue is String) {
+      try {
+        return DateTime.parse(dateValue);
+      } catch (e) {
+        return DateTime.now();
+      }
+    }
+
+    // If it's a milliseconds timestamp (int)
+    if (dateValue is int) {
+      return DateTime.fromMillisecondsSinceEpoch(dateValue);
+    }
+
+    // Fallback
+    return DateTime.now();
   }
 
   Map<String, dynamic> toJson() {

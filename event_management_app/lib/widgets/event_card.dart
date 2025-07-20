@@ -244,6 +244,7 @@ class EventCard extends StatelessWidget {
           ),
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
+      softWrap: true,
     );
   }
 
@@ -299,40 +300,45 @@ class EventCard extends StatelessWidget {
     return Row(
       children: [
         // Price
-        if (event.price > 0)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppTheme.successColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              '₹${event.price}',
-              style: const TextStyle(
-                color: AppTheme.successColor,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'Inter',
-              ),
-            ),
-          )
-        else
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: const Text(
-              'FREE',
-              style: TextStyle(
-                color: AppTheme.primaryColor,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'Inter',
-              ),
-            ),
-          ),
+        Flexible(
+          child: event.price > 0
+              ? Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.successColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '₹${event.price.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                      color: AppTheme.successColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Inter',
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              : Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    'FREE',
+                    style: TextStyle(
+                      color: AppTheme.primaryColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ),
+        ),
 
         const Spacer(),
 

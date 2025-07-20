@@ -95,6 +95,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 fontWeight: FontWeight.w700,
                                 color: AppTheme.grey900,
                               ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -102,6 +104,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppTheme.grey500,
                           ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -241,7 +245,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return TabBarView(
           controller: _tabController,
           children: [
-            _buildEventsGrid(eventProvider.upcomingEvents),
+            _buildEventsGrid(
+                eventProvider.events), // TEMP: Show all events for debugging
             _buildEventsGrid(eventProvider.popularEvents),
             _buildEventsGrid(eventProvider.liveEvents),
           ],

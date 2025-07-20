@@ -33,7 +33,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           icon: const Icon(Icons.close, color: AppTheme.white),
         ),
         title: const Text(
-          'Scan QR Code',
+          'Scan Attendee QR Code',
           style: TextStyle(color: AppTheme.white),
         ),
         actions: [
@@ -123,7 +123,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Position QR code within the frame',
+                    'Position attendee QR code within the frame',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: AppTheme.grey900,
@@ -132,7 +132,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'The QR code will be scanned automatically when detected',
+                    'Scan attendee QR codes to check them in for events',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppTheme.grey500,
                         ),

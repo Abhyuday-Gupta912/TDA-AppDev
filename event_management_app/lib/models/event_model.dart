@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Event {
   final String id;
   final String title;
@@ -45,7 +47,14 @@ class Event {
 
   bool get isFree => price == 0;
   bool get isFull => attendeesCount >= maxAttendees;
-  bool get isUpcoming => startDate.isAfter(DateTime.now());
+  bool get isUpcoming {
+    final now = DateTime.now();
+    final isAfter = startDate.isAfter(now);
+    print(
+        'Event ${title}: startDate=${startDate}, now=${now}, isUpcoming=${isAfter}');
+    return isAfter;
+  }
+
   bool get isPast => endDate.isBefore(DateTime.now());
 
   double get availabilityPercentage =>
@@ -57,10 +66,8 @@ class Event {
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       category: json['category'] ?? '',
-      startDate:
-          DateTime.parse(json['startDate'] ?? DateTime.now().toIso8601String()),
-      endDate:
-          DateTime.parse(json['endDate'] ?? DateTime.now().toIso8601String()),
+      startDate: _parseDateTime(json['startDate']),
+      endDate: _parseDateTime(json['endDate']),
       location: json['location'] ?? '',
       imageUrl: json['imageUrl'],
       price: (json['price'] ?? 0).toDouble(),
@@ -73,11 +80,39 @@ class Event {
       organizerName: json['organizerName'] ?? json['organizer']?['name'] ?? '',
       tags: List<String>.from(json['tags'] ?? []),
       additionalInfo: json['additionalInfo'],
-      createdAt:
-          DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt:
-          DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: _parseDateTime(json['createdAt']),
+      updatedAt: _parseDateTime(json['updatedAt']),
     );
+  }
+
+  /// Helper method to parse DateTime from various formats (Timestamp, String, or null)
+  static DateTime _parseDateTime(dynamic dateValue) {
+    if (dateValue == null) return DateTime.now();
+
+    // If it's already a DateTime
+    if (dateValue is DateTime) return dateValue;
+
+    // If it's a Firestore Timestamp
+    if (dateValue is Timestamp) {
+      return dateValue.toDate();
+    }
+
+    // If it's a string, try to parse it
+    if (dateValue is String) {
+      try {
+        return DateTime.parse(dateValue);
+      } catch (e) {
+        return DateTime.now();
+      }
+    }
+
+    // If it's a milliseconds timestamp (int)
+    if (dateValue is int) {
+      return DateTime.fromMillisecondsSinceEpoch(dateValue);
+    }
+
+    // Fallback
+    return DateTime.now();
   }
 
   Map<String, dynamic> toJson() {
@@ -189,15 +224,14 @@ class EventRegistration {
       userId: json['userId'] ?? '',
       userName: json['userName'] ?? '',
       userEmail: json['userEmail'] ?? '',
-      registrationDate: DateTime.parse(
-          json['registrationDate'] ?? DateTime.now().toIso8601String()),
+      registrationDate: Event._parseDateTime(json['registrationDate']),
       status: json['status'] ?? 'pending',
       amountPaid: (json['amountPaid'] ?? 0).toDouble(),
       paymentId: json['paymentId'],
       qrCode: json['qrCode'],
       hasAttended: json['hasAttended'] ?? false,
       attendanceTime: json['attendanceTime'] != null
-          ? DateTime.parse(json['attendanceTime'])
+          ? Event._parseDateTime(json['attendanceTime'])
           : null,
     );
   }

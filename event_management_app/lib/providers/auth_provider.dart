@@ -127,6 +127,66 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> signupAdmin({
+    required String email,
+    required String password,
+    required String firstName,
+    required String lastName,
+    required String phone,
+    required String adminCode,
+  }) async {
+    _setLoading(true);
+    _setError(null);
+
+    try {
+      final response = await AuthService.signupAdmin(
+        email: email,
+        password: password,
+        firstName: firstName,
+        lastName: lastName,
+        phone: phone,
+        adminCode: adminCode,
+      );
+
+      if (response['success']) {
+        _user = User.fromJson(response['user']);
+        await storage.StorageService.setToken(response['token']);
+        await storage.StorageService.setUser(_user!);
+        notifyListeners();
+        return true;
+      } else {
+        _setError(response['message'] ?? 'Admin signup failed');
+        return false;
+      }
+    } catch (e) {
+      _setError('Network error. Please try again.');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> promoteToAdmin(String userEmail) async {
+    _setLoading(true);
+    _setError(null);
+
+    try {
+      final response = await AuthService.promoteToAdmin(userEmail);
+
+      if (response['success']) {
+        return true;
+      } else {
+        _setError(response['message'] ?? 'Failed to promote user');
+        return false;
+      }
+    } catch (e) {
+      _setError('Network error. Please try again.');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> logout() async {
     _setLoading(true);
 

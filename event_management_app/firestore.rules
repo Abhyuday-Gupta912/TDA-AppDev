@@ -12,9 +12,13 @@ service cloud.firestore {
       // Anyone authenticated can read events
       allow read: if request.auth != null;
       
-      // Only authenticated users can create events
-      allow create: if request.auth != null && 
-        request.auth.uid == resource.data.organizerId;
+      // Allow creating events if:
+      // 1. User is the organizer of the event being created, OR
+      // 2. User is an admin
+      allow create: if request.auth != null && (
+        request.auth.uid == request.resource.data.organizerId ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+      );
       
       // Only event organizer or admin can update/delete
       allow update, delete: if request.auth != null && (

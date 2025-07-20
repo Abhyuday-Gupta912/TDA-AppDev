@@ -591,10 +591,12 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Your Entry QR Code',
+                  'Show this QR code to event staff for check-in',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.grey500,
+                        color: AppTheme.grey600,
+                        fontWeight: FontWeight.w500,
                       ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),

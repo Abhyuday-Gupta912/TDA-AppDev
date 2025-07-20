@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/event_provider.dart';
@@ -169,35 +170,58 @@ class _ProfileScreenState extends State<ProfileScreen>
               const SizedBox(height: 20),
 
               // Action Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _editProfile,
-                      icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('Edit Profile'),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppTheme.primaryColor),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, _) {
+                  final isAdmin = authProvider.user?.isAdmin == true;
+
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _editProfile,
+                          icon: const Icon(Icons.edit, size: 18),
+                          label: const Text('Edit Profile'),
+                          style: OutlinedButton.styleFrom(
+                            side:
+                                const BorderSide(color: AppTheme.primaryColor),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    onPressed: () => context.push('/qr-scanner'),
-                    icon: const Icon(Icons.qr_code_scanner, size: 18),
-                    label: const Text('Scan QR'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
-                      foregroundColor: AppTheme.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ],
+                      const SizedBox(width: 12),
+
+                      // Show different buttons for admin vs regular users
+                      if (isAdmin)
+                        ElevatedButton.icon(
+                          onPressed: () => context.push('/qr-scanner'),
+                          icon: const Icon(Icons.qr_code_scanner, size: 18),
+                          label: const Text('Scan QR'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                            foregroundColor: AppTheme.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        )
+                      else
+                        ElevatedButton.icon(
+                          onPressed: () => _showMyQRCodes(),
+                          icon: const Icon(Icons.qr_code, size: 18),
+                          label: const Text('My QR Codes'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.successColor,
+                            foregroundColor: AppTheme.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
             ],
           ),
@@ -522,6 +546,167 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showMyQRCodes() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        maxChildSize: 0.9,
+        minChildSize: 0.5,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: AppTheme.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // Handle
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(top: 12),
+                decoration: BoxDecoration(
+                  color: AppTheme.grey300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    const Icon(Icons.qr_code, color: AppTheme.primaryColor),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'My Event QR Codes',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+
+              // QR Codes List
+              Expanded(
+                child: Consumer<UserProvider>(
+                  builder: (context, userProvider, _) {
+                    final registeredEvents = userProvider.registeredEvents;
+
+                    if (registeredEvents.isEmpty) {
+                      return const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.qr_code_2,
+                              size: 64,
+                              color: AppTheme.grey400,
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'No Event QR Codes',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.grey600,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Register for events to see your QR codes here',
+                              style: TextStyle(color: AppTheme.grey500),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      controller: scrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: registeredEvents.length,
+                      itemBuilder: (context, index) {
+                        final event = registeredEvents[index];
+                        final userId =
+                            Provider.of<AuthProvider>(context, listen: false)
+                                    .user
+                                    ?.id ??
+                                '';
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.grey50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppTheme.grey200),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Event Info
+                              Text(
+                                event.title,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Show this QR code to event staff for check-in',
+                                style: TextStyle(
+                                  color: AppTheme.grey600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // QR Code
+                              Center(
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: QrImageView(
+                                    data:
+                                        '${event.id}:$userId:${DateTime.now().millisecondsSinceEpoch}',
+                                    version: QrVersions.auto,
+                                    size: 150,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
